@@ -14,7 +14,109 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      contributions: {
+        Row: {
+          amount: number
+          contribution_date: string
+          created_at: string
+          id: string
+          member_id: string
+          paid_on_time: boolean
+        }
+        Insert: {
+          amount: number
+          contribution_date?: string
+          created_at?: string
+          id?: string
+          member_id: string
+          paid_on_time?: boolean
+        }
+        Update: {
+          amount?: number
+          contribution_date?: string
+          created_at?: string
+          id?: string
+          member_id?: string
+          paid_on_time?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contributions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coordinators: {
+        Row: {
+          created_at: string
+          full_name: string
+          group_name: string
+          id: string
+          location: string
+          phone_number: string
+          pin: string
+          weekly_contribution_amount: number
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          group_name: string
+          id?: string
+          location: string
+          phone_number: string
+          pin: string
+          weekly_contribution_amount: number
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          group_name?: string
+          id?: string
+          location?: string
+          phone_number?: string
+          pin?: string
+          weekly_contribution_amount?: number
+        }
+        Relationships: []
+      }
+      members: {
+        Row: {
+          coordinator_id: string
+          created_at: string
+          date_joined: string
+          id: string
+          member_name: string
+          phone_number: string
+        }
+        Insert: {
+          coordinator_id: string
+          created_at?: string
+          date_joined?: string
+          id?: string
+          member_name: string
+          phone_number: string
+        }
+        Update: {
+          coordinator_id?: string
+          created_at?: string
+          date_joined?: string
+          id?: string
+          member_name?: string
+          phone_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "members_coordinator_id_fkey"
+            columns: ["coordinator_id"]
+            isOneToOne: false
+            referencedRelation: "coordinators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
