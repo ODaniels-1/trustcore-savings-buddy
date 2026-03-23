@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useCoordinator } from '@/lib/coordinator-context';
+import { getCached, setCache, isOnline } from '@/lib/offline-store';
 import PageHeader from '@/components/PageHeader';
 import TrustBadge from '@/components/TrustBadge';
 import { Button } from '@/components/ui/button';
@@ -17,11 +18,16 @@ interface Contribution {
   paid_on_time: boolean;
 }
 
+interface MemberData {
+  member_name: string;
+  date_joined: string;
+}
+
 const MemberProfile = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { coordinator } = useCoordinator();
-  const [member, setMember] = useState<{ member_name: string; date_joined: string } | null>(null);
+  const [member, setMember] = useState<MemberData | null>(null);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,12 +38,29 @@ const MemberProfile = () => {
 
   const fetchData = async () => {
     if (!id) return;
-    const [memberRes, contribRes] = await Promise.all([
-      supabase.from('members').select('member_name, date_joined').eq('id', id).single(),
-      supabase.from('contributions').select('*').eq('member_id', id).order('contribution_date', { ascending: false }),
-    ]);
-    if (memberRes.data) setMember(memberRes.data);
-    if (contribRes.data) setContributions(contribRes.data);
+
+    const memberCacheKey = `member_${id}`;
+    const contribCacheKey = `contribs_${id}`;
+
+    if (isOnline()) {
+      const [memberRes, contribRes] = await Promise.all([
+        supabase.from('members').select('member_name, date_joined').eq('id', id).single(),
+        supabase.from('contributions').select('*').eq('member_id', id).order('contribution_date', { ascending: false }),
+      ]);
+      if (memberRes.data) {
+        setMember(memberRes.data);
+        setCache(memberCacheKey, memberRes.data);
+      }
+      if (contribRes.data) {
+        setContributions(contribRes.data);
+        setCache(contribCacheKey, contribRes.data);
+      }
+    } else {
+      const cachedMember = getCached<MemberData>(memberCacheKey);
+      const cachedContribs = getCached<Contribution[]>(contribCacheKey);
+      if (cachedMember) setMember(cachedMember);
+      if (cachedContribs) setContributions(cachedContribs);
+    }
     setLoading(false);
   };
 

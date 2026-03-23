@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useCoordinator } from '@/lib/coordinator-context';
+import { isOnline, enqueue } from '@/lib/offline-store';
 import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,18 +44,26 @@ const RecordContribution = () => {
       return;
     }
     setSubmitting(true);
-    const { error: err } = await supabase.from('contributions').insert({
+
+    const payload = {
       member_id: id!,
       amount: numAmount,
       contribution_date: date,
       paid_on_time: paidOnTime,
-    });
-    if (err) {
-      toast.error(err.message);
-      setSubmitting(false);
-      return;
+    };
+
+    if (isOnline()) {
+      const { error: err } = await supabase.from('contributions').insert(payload);
+      if (err) {
+        toast.error(err.message);
+        setSubmitting(false);
+        return;
+      }
+      toast.success('Contribution recorded successfully!');
+    } else {
+      enqueue('contributions', payload);
+      toast.success('Contribution saved offline — will sync when you reconnect');
     }
-    toast.success('Contribution recorded successfully!');
     navigate(`/member/${id}`);
   };
 

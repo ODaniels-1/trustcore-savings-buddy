@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useCoordinator } from '@/lib/coordinator-context';
+import { getCached, setCache, isOnline } from '@/lib/offline-store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import TrustBadge from '@/components/TrustBadge';
@@ -29,27 +30,40 @@ const Dashboard = () => {
 
   const fetchMembers = async () => {
     if (!coordinator) return;
-    const { data: membersData } = await supabase
-      .from('members')
-      .select('id, member_name')
-      .eq('coordinator_id', coordinator.id)
-      .order('created_at', { ascending: false });
 
-    if (!membersData) { setLoading(false); return; }
+    const cacheKey = `members_${coordinator.id}`;
 
-    const membersWithScores: MemberWithScore[] = await Promise.all(
-      membersData.map(async (m) => {
-        const { data: contribs } = await supabase
-          .from('contributions')
-          .select('paid_on_time')
-          .eq('member_id', m.id);
-        const total = contribs?.length || 0;
-        const onTime = contribs?.filter(c => c.paid_on_time).length || 0;
-        const trustScore = total > 0 ? Math.round((onTime / total) * 100) : 0;
-        return { ...m, trustScore };
-      })
-    );
-    setMembers(membersWithScores);
+    // Try network first
+    if (isOnline()) {
+      const { data: membersData } = await supabase
+        .from('members')
+        .select('id, member_name')
+        .eq('coordinator_id', coordinator.id)
+        .order('created_at', { ascending: false });
+
+      if (membersData) {
+        const membersWithScores: MemberWithScore[] = await Promise.all(
+          membersData.map(async (m) => {
+            const { data: contribs } = await supabase
+              .from('contributions')
+              .select('paid_on_time')
+              .eq('member_id', m.id);
+            const total = contribs?.length || 0;
+            const onTime = contribs?.filter(c => c.paid_on_time).length || 0;
+            const trustScore = total > 0 ? Math.round((onTime / total) * 100) : 0;
+            return { ...m, trustScore };
+          })
+        );
+        setMembers(membersWithScores);
+        setCache(cacheKey, membersWithScores);
+        setLoading(false);
+        return;
+      }
+    }
+
+    // Fallback to cache
+    const cached = getCached<MemberWithScore[]>(cacheKey);
+    if (cached) setMembers(cached);
     setLoading(false);
   };
 
