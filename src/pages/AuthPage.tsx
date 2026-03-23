@@ -34,15 +34,7 @@ const AuthPage = () => {
       navigate('/dashboard');
       return;
     }
-    // Check if a coordinator exists
-    const check = async () => {
-      const { data } = await supabase.from('coordinators').select('id').limit(1);
-      if (!data || data.length === 0) {
-        setIsRegistering(true);
-      }
-      setLoading(false);
-    };
-    check();
+    setLoading(false);
   }, [coordinator, navigate]);
 
   const handleRegister = async (e: React.FormEvent) => {
