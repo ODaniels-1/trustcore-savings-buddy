@@ -34,15 +34,7 @@ const AuthPage = () => {
       navigate('/dashboard');
       return;
     }
-    // Check if a coordinator exists
-    const check = async () => {
-      const { data } = await supabase.from('coordinators').select('id').limit(1);
-      if (!data || data.length === 0) {
-        setIsRegistering(true);
-      }
-      setLoading(false);
-    };
-    check();
+    setLoading(false);
   }, [coordinator, navigate]);
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -162,6 +154,12 @@ const AuthPage = () => {
               <Button type="submit" className="w-full" size="lg" disabled={submitting}>
                 {submitting ? 'Creating...' : 'Create Account'}
               </Button>
+              <p className="text-center text-sm text-muted-foreground">
+                Already have an account?{' '}
+                <button type="button" className="underline hover:text-foreground font-medium" onClick={() => { setIsRegistering(false); setError(''); }}>
+                  Login
+                </button>
+              </p>
             </form>
           ) : (
             <form onSubmit={handleLogin} className="space-y-4">
@@ -177,11 +175,19 @@ const AuthPage = () => {
               <Button type="submit" className="w-full" size="lg" disabled={submitting}>
                 {submitting ? 'Logging in...' : 'Login'}
               </Button>
-              <p className="text-center text-sm text-muted-foreground">
-                <button type="button" className="underline hover:text-foreground" onClick={() => toast.info('Please contact TrustCore support to reset your PIN.')}>
-                  Forgot PIN?
-                </button>
-              </p>
+              <div className="text-center space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  <button type="button" className="underline hover:text-foreground" onClick={() => toast.info('Please contact TrustCore support to reset your PIN.')}>
+                    Forgot PIN?
+                  </button>
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Don't have an account?{' '}
+                  <button type="button" className="underline hover:text-foreground font-medium" onClick={() => { setIsRegistering(true); setError(''); }}>
+                    Register
+                  </button>
+                </p>
+              </div>
             </form>
           )}
         </CardContent>
