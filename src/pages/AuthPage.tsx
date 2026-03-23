@@ -154,6 +154,12 @@ const AuthPage = () => {
               <Button type="submit" className="w-full" size="lg" disabled={submitting}>
                 {submitting ? 'Creating...' : 'Create Account'}
               </Button>
+              <p className="text-center text-sm text-muted-foreground">
+                Already have an account?{' '}
+                <button type="button" className="underline hover:text-foreground font-medium" onClick={() => { setIsRegistering(false); setError(''); }}>
+                  Login
+                </button>
+              </p>
             </form>
           ) : (
             <form onSubmit={handleLogin} className="space-y-4">
