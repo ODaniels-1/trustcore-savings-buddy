@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useCoordinator } from '@/lib/coordinator-context';
+import { isOnline, enqueue } from '@/lib/offline-store';
 import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,18 +23,26 @@ const AddMember = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const { error } = await supabase.from('members').insert({
+
+    const payload = {
       coordinator_id: coordinator.id,
       member_name: name.trim(),
       phone_number: phone.trim(),
       date_joined: dateJoined,
-    });
-    if (error) {
-      toast.error(error.message);
-      setSubmitting(false);
-      return;
+    };
+
+    if (isOnline()) {
+      const { error } = await supabase.from('members').insert(payload);
+      if (error) {
+        toast.error(error.message);
+        setSubmitting(false);
+        return;
+      }
+      toast.success('Member added successfully!');
+    } else {
+      enqueue('members', payload);
+      toast.success('Member saved offline — will sync when you reconnect');
     }
-    toast.success('Member added successfully!');
     navigate('/dashboard');
   };
 
