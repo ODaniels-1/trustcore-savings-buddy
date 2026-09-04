@@ -208,6 +208,16 @@ const AuthPage = () => {
               <Button type="submit" className="w-full" size="lg" disabled={submitting}>
                 {submitting ? 'Logging in...' : 'Login'}
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                size="lg"
+                disabled={submitting}
+                onClick={handleDemoLogin}
+              >
+                {submitting ? 'Logging in...' : 'Demo Login for Judges'}
+              </Button>
               <div className="text-center space-y-2">
                 <p className="text-sm text-muted-foreground">
                   <button type="button" className="underline hover:text-foreground" onClick={() => toast.info('Please contact TrustCore support to reset your PIN.')}>
