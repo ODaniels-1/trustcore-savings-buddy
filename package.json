@@ -1,7 +1,8 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "trustcore",
+  "description": "TrustCore — a PWA for Nigerian ajo savings group coordinators to manage members, contributions, and credit profiles online or offline.",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
