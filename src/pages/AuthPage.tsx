@@ -103,6 +103,39 @@ const AuthPage = () => {
     navigate('/dashboard');
   };
 
+  const handleDemoLogin = async () => {
+    setError('');
+    setSubmitting(true);
+    const demoPhone = '08012345678';
+    const demoPin = '1234';
+    const { data, error: err } = await supabase
+      .from('coordinators')
+      .select('*')
+      .eq('phone_number', demoPhone)
+      .single();
+
+    if (err || !data) {
+      setError('Demo account not found. Please register a new account.');
+      setSubmitting(false);
+      return;
+    }
+    if (data.pin !== demoPin) {
+      setError('Demo PIN is incorrect.');
+      setSubmitting(false);
+      return;
+    }
+    setCoordinator({
+      id: data.id,
+      full_name: data.full_name,
+      group_name: data.group_name,
+      location: data.location,
+      weekly_contribution_amount: data.weekly_contribution_amount,
+      phone_number: data.phone_number,
+    });
+    toast.success('Demo login successful!');
+    navigate('/dashboard');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -174,6 +207,16 @@ const AuthPage = () => {
               {error && <p className="text-sm text-destructive font-medium">{error}</p>}
               <Button type="submit" className="w-full" size="lg" disabled={submitting}>
                 {submitting ? 'Logging in...' : 'Login'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                size="lg"
+                disabled={submitting}
+                onClick={handleDemoLogin}
+              >
+                {submitting ? 'Logging in...' : 'Demo Login for Judges'}
               </Button>
               <div className="text-center space-y-2">
                 <p className="text-sm text-muted-foreground">
